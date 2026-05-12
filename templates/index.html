@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ФильмоПоиск - Найдите идеальный фильм</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f1f5f9;
+            --accent-color: #3b82f6;
+            --accent-dark: #1d4ed8;
+            --error-color: #f43f5e;
+            --filter-bg: #334155;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #ff6b6b, #4dabf7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .search-container {
+            max-width: 860px;
+            margin: 0 auto 3rem;
+            background: rgba(30, 41, 59, 0.9);
+            padding: 2rem;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(100, 150, 255, 0.25);
+        }
+
+        .search-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .active-filters {
+            font-size: 0.95rem;
+            color: #cbd5e1;
+        }
+
+        .filter-btn {
+            background: var(--filter-bg);
+            color: white;
+            border: none;
+            padding: 0.6rem 1rem;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        #searchInput {
+            width: 100%;
+            padding: 1rem 1rem 1rem 2.8rem;
+            border: 1px solid rgba(100, 150, 255, 0.45);
+            border-radius: 50px;
+            background: rgba(35, 40, 60, 0.95);
+            color: white;
+            font-size: 1.05rem;
+        }
+
+        #searchInput:focus {
+            outline: none;
+            box-shadow: 0 0 0 0.2rem rgba(77, 171, 247, 0.25);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            color: #60a5fa;
+        }
+
+        .search-btn {
+            width: 100%;
+            background: linear-gradient(120deg, #4dabf7, #339af0);
+            color: white;
+            border: none;
+            padding: 0.95rem;
+            border-radius: 50px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-top: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(77, 171, 247, 0.4);
+        }
+
+        .filter-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .filter-content {
+            background: var(--card-bg);
+            border-radius: 18px;
+            width: 90%;
+            max-width: 640px;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .close-filter {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.75rem;
+            cursor: pointer;
+        }
+
+        .filter-title {
+            margin-bottom: 1.5rem;
+            color: var(--accent-color);
+        }
+
+        .filter-section {
+            margin-bottom: 1.75rem;
+        }
+
+        .filter-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .filter-option {
+            background: var(--filter-bg);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 0.8rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-option:hover, .filter-option.selected {
+            background: var(--accent-dark);
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+
+        .results-container {
+            display: none;
+            margin-top: 2rem;
+        }
+
+        .movie-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .movie-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(100, 150, 255, 0.2);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.28);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .movie-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 24px rgba(0,0,0,0.34);
+        }
+
+        .movie-poster-container {
+            height: 340px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+
+        .movie-poster {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .movie-poster-placeholder {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+        }
+
+        .placeholder-icon {
+            font-size: 3rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .movie-info {
+            padding: 1rem;
+        }
+
+        .movie-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.5rem;
+            min-height: 2.6rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .movie-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .movie-rating {
+            display: inline-block;
+            background: linear-gradient(120deg, #f6d365, #fda085);
+            color: #1a1a2e;
+            padding: 0.2rem 0.8rem;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 0.95rem;
+        }
+
+        .movie-genres {
+            color: #cbd5e1;
+            font-size: 0.85rem;
+        }
+
+        .movie-age {
+            display: inline-block;
+            background: rgba(59, 130, 246, 0.18);
+            color: #bfdbfe;
+            border: 1px solid rgba(59, 130, 246, 0.35);
+            padding: 0.2rem 0.55rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-top: 0.55rem;
+        }
+
+        .movie-description-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.72);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1100;
+            padding: 1rem;
+        }
+
+        .movie-description-content {
+            width: 100%;
+            max-width: 720px;
+            background: var(--card-bg);
+            border-radius: 18px;
+            padding: 1.5rem;
+            position: relative;
+            border: 1px solid rgba(100, 150, 255, 0.22);
+        }
+
+        .movie-description-title {
+            margin-bottom: 0.8rem;
+        }
+
+        .movie-description-layout {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+
+        .movie-description-poster {
+            width: 220px;
+            max-width: 100%;
+            border-radius: 14px;
+            object-fit: cover;
+            background: #0f172a;
+            border: 1px solid rgba(100, 150, 255, 0.2);
+        }
+
+        .movie-description-main {
+            flex: 1;
+            min-width: 260px;
+        }
+
+        .movie-description-text {
+            color: #e2e8f0;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .movie-description-meta {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .movie-description-actors {
+            color: #cbd5e1;
+            margin-bottom: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .loading, .error-container {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(77,171,247,0.25);
+            border-top: 5px solid #4dabf7;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .error-container {
+            background: rgba(220,53,69,0.15);
+            border-radius: 15px;
+            border: 1px solid rgba(220,53,69,0.3);
+            max-width: 860px;
+            margin: 2rem auto;
+        }
+
+        .footer {
+            text-align: center;
+            color: #64748b;
+            padding: 2rem 0;
+            margin-top: 2rem;
+            border-top: 1px solid rgba(100,150,255,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <header class="header">
+            <h1 class="logo">🎬 ФильмоПоиск</h1>
+            <p class="lead text-center text-muted">Поиск фильмов по запросу, жанру и возрастной категории</p>
+        </header>
+
+        <main>
+            <div class="search-container">
+                <div class="search-header">
+                    <button id="filterBtn" class="filter-btn">🔍 Фильтры</button>
+                    <div id="activeFilters" class="active-filters">Фильтры не выбраны</div>
+                </div>
+
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Например: детектив, космос, Леонардо ДиКаприо...">
+                </div>
+                <button id="searchBtn" class="search-btn">🎬 Найти фильмы</button>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p class="h5">Ищем фильмы...</p>
+                <p class="text-muted" id="searchQueryDisplay"></p>
+            </div>
+
+            <div class="results-container" id="resultsContainer">
+                <div class="results-header text-center mb-4">
+                    <h2 class="h3">Результаты</h2>
+                </div>
+                <div class="movie-grid" id="moviesGrid"></div>
+            </div>
+
+            <div class="error-container" id="errorContainer">
+                <h3 class="text-danger mb-3">⚠️ Ошибка</h3>
+                <p id="errorMessage" class="mb-0"></p>
+            </div>
+        </main>
+    </div>
+
+    <div class="filter-modal" id="filterModal">
+        <div class="filter-content">
+            <button class="close-filter" id="closeFilter">&times;</button>
+            <h3 class="filter-title">Фильтры</h3>
+
+            <div class="filter-section">
+                <h4>Жанры</h4>
+                <div class="filter-options" id="genreOptions">
+                    {% for genre in genres %}
+                    <div class="filter-option" data-value="{{ genre }}">{{ genre_translations.get(genre, genre) }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <h4>Возрастные категории</h4>
+                <div class="filter-options" id="ageOptions">
+                    {% for age in age_ratings %}
+                    <div class="filter-option" data-value="{{ age }}">{{ age }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-3">
+                <button class="search-btn mt-0" id="applyFilters">Применить фильтры</button>
+                <button class="search-btn mt-0" id="resetFilters" style="background: linear-gradient(120deg, #64748b, #475569); box-shadow: none;">Сбросить</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p class="mb-0">© <span id="year"></span> ФильмоПоиск</p>
+    </footer>
+
+    <div class="movie-description-modal" id="movieDescriptionModal">
+        <div class="movie-description-content">
+            <button class="close-filter" id="closeMovieDescription">&times;</button>
+            <div class="movie-description-layout">
+                <img id="movieDescriptionPoster" class="movie-description-poster" alt="Постер фильма">
+                <div class="movie-description-main">
+                    <h3 class="movie-description-title" id="movieDescriptionTitle">Описание фильма</h3>
+                    <div class="movie-description-meta" id="movieDescriptionMeta"></div>
+                    <div class="movie-description-actors" id="movieDescriptionActors"></div>
+                    <div class="movie-description-text" id="movieDescriptionText"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const loading = document.getElementById('loading');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const moviesGrid = document.getElementById('moviesGrid');
+        const errorContainer = document.getElementById('errorContainer');
+        const errorMessage = document.getElementById('errorMessage');
+        const searchQueryDisplay = document.getElementById('searchQueryDisplay');
+        const filterBtn = document.getElementById('filterBtn');
+        const filterModal = document.getElementById('filterModal');
+        const closeFilter = document.getElementById('closeFilter');
+        const applyFiltersBtn = document.getElementById('applyFilters');
+        const resetFiltersBtn = document.getElementById('resetFilters');
+        const activeFilters = document.getElementById('activeFilters');
+        const movieDescriptionModal = document.getElementById('movieDescriptionModal');
+        const closeMovieDescriptionBtn = document.getElementById('closeMovieDescription');
+        const movieDescriptionTitle = document.getElementById('movieDescriptionTitle');
+        const movieDescriptionMeta = document.getElementById('movieDescriptionMeta');
+        const movieDescriptionActors = document.getElementById('movieDescriptionActors');
+        const movieDescriptionText = document.getElementById('movieDescriptionText');
+        const movieDescriptionPoster = document.getElementById('movieDescriptionPoster');
+
+        let currentFilters = { genre: null, age_rating: null };
+
+        function updateActiveFiltersLabel() {
+            const parts = [];
+            if (currentFilters.genre) parts.push(`жанр: ${currentFilters.genre}`);
+            if (currentFilters.age_rating) parts.push(`возраст: ${currentFilters.age_rating}`);
+            activeFilters.textContent = parts.length ? parts.join(' · ') : 'Фильтры не выбраны';
+        }
+
+        function showLoading(text) {
+            searchQueryDisplay.textContent = text || 'Выполняется поиск';
+            loading.style.display = 'block';
+            resultsContainer.style.display = 'none';
+            errorContainer.style.display = 'none';
+        }
+
+        function hideLoading() {
+            loading.style.display = 'none';
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorContainer.style.display = 'block';
+            resultsContainer.style.display = 'none';
+            hideLoading();
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function openMovieDescription(movie) {
+            movieDescriptionTitle.textContent = movie.title || 'Описание фильма';
+
+            const metaParts = [];
+            if (movie.rating) metaParts.push(`<span class="movie-rating">⭐ ${movie.rating}</span>`);
+            if (movie.age_rating) metaParts.push(`<span class="movie-age">${escapeHtml(movie.age_rating)}</span>`);
+            if (movie.genres) metaParts.push(`<span class="movie-genres">${escapeHtml(movie.genres)}</span>`);
+            movieDescriptionMeta.innerHTML = metaParts.join('');
+
+            movieDescriptionActors.innerHTML = (movie.actors && movie.actors.trim())
+                ? `<strong>Актеры:</strong> ${escapeHtml(movie.actors)}`
+                : '';
+
+            movieDescriptionText.textContent = (movie.description && movie.description.trim())
+                ? movie.description.trim()
+                : 'Краткое описание пока отсутствует.';
+
+            if (movie.poster && movie.poster.trim() !== '') {
+                movieDescriptionPoster.src = movie.poster;
+                movieDescriptionPoster.style.display = 'block';
+            } else {
+                movieDescriptionPoster.removeAttribute('src');
+                movieDescriptionPoster.style.display = 'none';
+            }
+
+            movieDescriptionModal.style.display = 'flex';
+        }
+
+        function closeMovieDescription() {
+            movieDescriptionModal.style.display = 'none';
+        }
+
+        function showResults(results) {
+            moviesGrid.innerHTML = '';
+
+            results.forEach(movie => {
+                let posterElement = '';
+                if (movie.poster && movie.poster.trim() !== '') {
+                    posterElement = `<img src="${movie.poster}" class="movie-poster" alt="${movie.title}">`;
+                } else {
+                    posterElement = `
+                        <div class="movie-poster-placeholder">
+                            <div class="placeholder-icon">🎬</div>
+                            <p>Постер отсутствует</p>
+                        </div>`;
+                }
+
+                const movieCard = document.createElement('div');
+                movieCard.className = 'movie-card';
+                movieCard.innerHTML = `
+                    <div class="movie-poster-container">${posterElement}</div>
+                    <div class="movie-info">
+                        <h3 class="movie-title">${movie.title}</h3>
+                        <div class="movie-meta">
+                            ${movie.rating ? `<span class="movie-rating">⭐ ${movie.rating}</span>` : '<span></span>'}
+                            ${movie.genres ? `<span class="movie-genres">${movie.genres}</span>` : ''}
+                        </div>
+                        ${movie.age_rating ? `<div class="movie-age">${movie.age_rating}</div>` : ''}
+                    </div>`;
+                movieCard.addEventListener('click', () => openMovieDescription(movie));
+                moviesGrid.appendChild(movieCard);
+            });
+
+            resultsContainer.style.display = 'block';
+            errorContainer.style.display = 'none';
+            hideLoading();
+        }
+
+        async function performSearch() {
+            const query = searchInput.value.trim();
+            const label = query
+                ? `Запрос: "${query}"`
+                : (currentFilters.genre || currentFilters.age_rating)
+                    ? 'Поиск по выбранным фильтрам'
+                    : 'Случайные фильмы с высоким рейтингом';
+            showLoading(label);
+
+            try {
+                const response = await fetch('/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: query,
+                        genre: currentFilters.genre,
+                        age_rating: currentFilters.age_rating,
+                    })
+                });
+
+                const rawText = await response.text();
+
+                let data;
+                try {
+                    data = JSON.parse(rawText);
+                } catch (parseError) {
+                    console.error('Сервер вернул не JSON:', rawText);
+                    throw new Error(
+                        'Сервер вернул HTML вместо JSON. Обновите страницу Ctrl+F5 и проверьте, что открыт адрес http://127.0.0.1:5000/'
+                    );
+                }
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Произошла ошибка при поиске');
+                }
+
+                if (data.success && data.results && data.results.length > 0) {
+                    showResults(data.results);
+                } else {
+                    showError('Ничего не найдено. Попробуйте изменить запрос или фильтры.');
+                }
+            } catch (error) {
+                console.error(error);
+                showError(error.message || 'Ошибка при поиске фильмов.');
+            }
+        }
+
+        function openFilterModal() {
+            filterModal.style.display = 'flex';
+        }
+
+        function closeFilterModal() {
+            filterModal.style.display = 'none';
+        }
+
+        function applyFilters() {
+            const selectedGenre = document.querySelector('#genreOptions .filter-option.selected');
+            const selectedAge = document.querySelector('#ageOptions .filter-option.selected');
+
+            currentFilters.genre = selectedGenre ? selectedGenre.dataset.value : null;
+            currentFilters.age_rating = selectedAge ? selectedAge.dataset.value : null;
+
+            updateActiveFiltersLabel();
+            closeFilterModal();
+            performSearch();
+        }
+
+        function resetFilters() {
+            document.querySelectorAll('#genreOptions .filter-option, #ageOptions .filter-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            currentFilters = { genre: null, age_rating: null };
+            updateActiveFiltersLabel();
+            closeFilterModal();
+        }
+
+        searchBtn.addEventListener('click', performSearch);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performSearch();
+        });
+
+        filterBtn.addEventListener('click', openFilterModal);
+        closeMovieDescriptionBtn.addEventListener('click', closeMovieDescription);
+        closeFilter.addEventListener('click', closeFilterModal);
+        applyFiltersBtn.addEventListener('click', applyFilters);
+        resetFiltersBtn.addEventListener('click', resetFilters);
+
+        filterModal.addEventListener('click', (e) => {
+            if (e.target === filterModal) closeFilterModal();
+        });
+
+        movieDescriptionModal.addEventListener('click', (e) => {
+            if (e.target === movieDescriptionModal) closeMovieDescription();
+        });
+
+        document.querySelectorAll('.filter-option').forEach(option => {
+            option.addEventListener('click', function() {
+                this.parentElement.querySelectorAll('.filter-option').forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+
+        updateActiveFiltersLabel();
+    </script>
+</body>
+</html>
