@@ -10,6 +10,8 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+import os
+print("Список файлов на сервере:", os.listdir())
 
 app = Flask(__name__)
 load_dotenv()
